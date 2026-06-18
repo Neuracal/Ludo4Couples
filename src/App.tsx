@@ -38,23 +38,6 @@ function parseTaskMarkdown(markdown: string) {
     .filter(Boolean);
 }
 
-function useLocalStorageState<T>(key: string, initialValue: T) {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const stored = window.localStorage.getItem(key);
-      return stored ? ({ ...initialValue, ...JSON.parse(stored) } as T) : initialValue;
-    } catch {
-      return initialValue;
-    }
-  });
-
-  useEffect(() => {
-    window.localStorage.setItem(key, JSON.stringify(value));
-  }, [key, value]);
-
-  return [value, setValue] as const;
-}
-
 function createPlayers(settings: GameSettings, maxPosition = Number.POSITIVE_INFINITY): PlayerState[] {
   return gameConfig.players.map((player, index) => ({
     ...player,
@@ -127,7 +110,7 @@ function playTaskSound(enabled: boolean) {
 }
 
 function App() {
-  const [settings, setSettings] = useLocalStorageState<GameSettings>("ludo4couples-settings", defaultSettings);
+  const [settings, setSettings] = useState<GameSettings>(defaultSettings);
   const configuredTasks = useMemo(() => parseTaskMarkdown(settings.taskMarkdown), [settings.taskMarkdown]);
   const boardConfig = useMemo(() => createBoardConfig(configuredTasks.length), [configuredTasks.length]);
   const [players, setPlayers] = useState<PlayerState[]>(() => createPlayers(settings, boardConfig.finishIndex));
