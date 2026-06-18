@@ -4,7 +4,7 @@
 
 ## 网页运行
 
-打开链接 https://github.com/Neuracal/Ludo4Couples 即可游玩。
+打开链接 https://neuracal.github.io/Ludo4Couples/ 即可游玩。
 
 ## 本地运行
 
