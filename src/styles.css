@@ -28,7 +28,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -527,7 +528,8 @@ button {
 }
 
 .settings-modal input[type="text"],
-.settings-modal input:not([type]) {
+.settings-modal input:not([type]),
+.settings-modal textarea {
   width: 100%;
   border: 0;
   border-radius: 16px;
@@ -535,6 +537,13 @@ button {
   background: #fff9ef;
   color: var(--ink);
   outline: 2px solid rgba(255, 111, 145, 0.16);
+}
+
+.settings-modal textarea {
+  min-height: 260px;
+  resize: vertical;
+  line-height: 1.55;
+  white-space: pre;
 }
 
 .settings-note {

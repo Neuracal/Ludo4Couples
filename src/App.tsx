@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createBoardConfig, gameConfig } from "./gameConfig";
 import tasksMarkdown from "./tasks.md?raw";
 
@@ -12,8 +12,8 @@ interface PlayerState {
 
 interface GameSettings {
   names: [string, string];
-  adultMode: boolean;
   sound: boolean;
+  taskMarkdown: string;
 }
 
 interface ActiveTask {
@@ -25,8 +25,8 @@ interface ActiveTask {
 
 const defaultSettings: GameSettings = {
   names: ["恋人 A", "恋人 B"],
-  adultMode: false,
   sound: true,
+  taskMarkdown: tasksMarkdown.trim(),
 };
 
 function parseTaskMarkdown(markdown: string) {
@@ -37,9 +37,6 @@ function parseTaskMarkdown(markdown: string) {
     .map((line) => line.replace(/^[-*]\s+/, "").trim())
     .filter(Boolean);
 }
-
-const configuredTasks = parseTaskMarkdown(tasksMarkdown);
-const boardConfig = createBoardConfig(configuredTasks.length);
 
 function useLocalStorageState<T>(key: string, initialValue: T) {
   const [value, setValue] = useState<T>(() => {
@@ -58,11 +55,11 @@ function useLocalStorageState<T>(key: string, initialValue: T) {
   return [value, setValue] as const;
 }
 
-function createPlayers(settings: GameSettings): PlayerState[] {
+function createPlayers(settings: GameSettings, maxPosition = Number.POSITIVE_INFINITY): PlayerState[] {
   return gameConfig.players.map((player, index) => ({
     ...player,
     name: settings.names[index] || player.name,
-    position: 0,
+    position: Math.min(0, maxPosition),
   }));
 }
 
@@ -131,14 +128,18 @@ function playTaskSound(enabled: boolean) {
 
 function App() {
   const [settings, setSettings] = useLocalStorageState<GameSettings>("ludo4couples-settings", defaultSettings);
-  const [players, setPlayers] = useState<PlayerState[]>(() => createPlayers(settings));
+  const configuredTasks = useMemo(() => parseTaskMarkdown(settings.taskMarkdown), [settings.taskMarkdown]);
+  const boardConfig = useMemo(() => createBoardConfig(configuredTasks.length), [configuredTasks.length]);
+  const [players, setPlayers] = useState<PlayerState[]>(() => createPlayers(settings, boardConfig.finishIndex));
   const [cellTasks, setCellTasks] = useState<string[]>(() => dealTasksToCells(configuredTasks, boardConfig.boardCells.length));
+  const [taskDraft, setTaskDraft] = useState(settings.taskMarkdown);
+  const taskEditorRef = useRef<HTMLTextAreaElement>(null);
   const [turnIndex, setTurnIndex] = useState(0);
   const [dice, setDice] = useState<number | null>(null);
   const [isMoving, setIsMoving] = useState(false);
   const [activeTask, setActiveTask] = useState<ActiveTask | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [notice, setNotice] = useState("准备好后，先在设置里确认双方成年并同意随机任务。");
+  const [notice, setNotice] = useState("准备好后即可掷骰开始。");
   const [winner, setWinner] = useState<PlayerState | null>(null);
   const [history, setHistory] = useState<string[]>([]);
 
@@ -147,12 +148,26 @@ function App() {
       currentPlayers.map((player, index) => ({
         ...player,
         name: settings.names[index] || gameConfig.players[index].name,
+        position: Math.min(player.position, boardConfig.finishIndex),
       })),
     );
-  }, [settings.names]);
+  }, [boardConfig.finishIndex, settings.names]);
+
+  useEffect(() => {
+    if (!settingsOpen) {
+      return;
+    }
+
+    const selectEditor = () => {
+      taskEditorRef.current?.focus();
+      taskEditorRef.current?.select();
+    };
+    window.requestAnimationFrame(selectEditor);
+    window.setTimeout(selectEditor, 80);
+  }, [settingsOpen]);
 
   const currentPlayer = players[turnIndex];
-  const canRoll = !isMoving && !activeTask && !winner && settings.adultMode;
+  const canRoll = !isMoving && !activeTask && !winner;
 
   function finishTurn(nextNotice?: string) {
     const nextIndex = (turnIndex + 1) % players.length;
@@ -170,9 +185,6 @@ function App() {
 
   function rollDice() {
     if (!canRoll) {
-      if (!settings.adultMode) {
-        setNotice("请先在设置里确认双方均已成年，并同意随机抽取任务。");
-      }
       return;
     }
 
@@ -221,15 +233,17 @@ function App() {
     finishTurn(`${player.name} 完成任务，轮到下一位。`);
   }
 
-  function resetGame() {
-    setPlayers(createPlayers(settings));
-    setCellTasks(dealTasksToCells(configuredTasks, boardConfig.boardCells.length));
+  function resetGame(nextSettings = settings) {
+    const nextTasks = parseTaskMarkdown(nextSettings.taskMarkdown);
+    const nextBoardConfig = createBoardConfig(nextTasks.length);
+    setPlayers(createPlayers(nextSettings, nextBoardConfig.finishIndex));
+    setCellTasks(dealTasksToCells(nextTasks, nextBoardConfig.boardCells.length));
     setTurnIndex(0);
     setDice(null);
     setActiveTask(null);
     setWinner(null);
     setHistory([]);
-    setNotice(`新一局任务已重新洗牌，由 ${settings.names[0] || "恋人 A"} 掷骰。`);
+    setNotice(`新一局任务已重新洗牌，由 ${nextSettings.names[0] || "恋人 A"} 掷骰。`);
   }
 
   function updateName(index: 0 | 1, name: string) {
@@ -240,6 +254,21 @@ function App() {
     });
   }
 
+  function openSettings() {
+    setTaskDraft(settings.taskMarkdown);
+    setSettingsOpen(true);
+  }
+
+  function saveSettings() {
+    const nextSettings = {
+      ...settings,
+      taskMarkdown: taskDraft.trim() || defaultSettings.taskMarkdown,
+    };
+    setSettings(nextSettings);
+    setSettingsOpen(false);
+    resetGame(nextSettings);
+  }
+
   return (
     <div className="app-shell">
       <header className="hero">
@@ -248,7 +277,7 @@ function App() {
           <h1>{gameConfig.title}</h1>
           <p className="hero-copy">掷骰前进，数字格抽任务。任务统一来自 Markdown 配置，开局随机洗牌铺入棋盘。</p>
         </div>
-        <button className="ghost-button" type="button" onClick={() => setSettingsOpen(true)}>
+        <button className="ghost-button" type="button" onClick={openSettings}>
           设置
         </button>
       </header>
@@ -313,16 +342,15 @@ function App() {
               {dice ?? "?"}
             </div>
             <button className="roll-button" type="button" onClick={rollDice} disabled={!canRoll}>
-              {winner ? "已结束" : !settings.adultMode ? "先确认同意" : isMoving ? "移动中" : "掷骰"}
+              {winner ? "已结束" : isMoving ? "移动中" : "掷骰"}
             </button>
-            <button className="text-button" type="button" onClick={resetGame}>
+            <button className="text-button" type="button" onClick={() => resetGame()}>
               重新洗牌开局
             </button>
           </div>
 
           <div className="rules-card">
             <h2>本局设置</h2>
-            <p>成人同意：{settings.adultMode ? "已确认" : "未确认"}</p>
             <p>任务数量：{configuredTasks.length} 条</p>
             <p>棋盘格数：{boardConfig.boardCells.length} 格</p>
             <p>音效：{settings.sound ? "开启" : "关闭"}</p>
@@ -365,7 +393,7 @@ function App() {
             <h2 id="winner-title">{winner.name} 抵达终点</h2>
             <p>胜利奖励：由赢家选择一个今晚奖励。</p>
             <div className="modal-actions">
-              <button className="roll-button" type="button" onClick={resetGame}>
+              <button className="roll-button" type="button" onClick={() => resetGame()}>
                 再来一局
               </button>
               <button className="ghost-button" type="button" onClick={() => setWinner(null)}>
@@ -401,28 +429,32 @@ function App() {
             <label className="toggle-line">
               <input
                 type="checkbox"
-                checked={settings.adultMode}
-                onChange={(event) => setSettings((current) => ({ ...current, adultMode: event.target.checked }))}
-              />
-              双方均已成年，并同意从任务列表中随机抽取任务
-            </label>
-
-            <label className="toggle-line">
-              <input
-                type="checkbox"
                 checked={settings.sound}
                 onChange={(event) => setSettings((current) => ({ ...current, sound: event.target.checked }))}
               />
               开启轻音效
             </label>
 
-            <p className="settings-note">任务请直接编辑 src/tasks.md，每一条任务是一行 bullet point。任务条数会决定棋格数量，重新开局会重新洗牌。</p>
+            <label>
+              自定义任务
+              <textarea
+                ref={taskEditorRef}
+                autoFocus
+                rows={12}
+                value={taskDraft}
+                onChange={(event) => setTaskDraft(event.target.value)}
+                onFocus={(event) => event.currentTarget.select()}
+                spellCheck={false}
+              />
+            </label>
+
+            <p className="settings-note">每一条任务写成一行 Markdown bullet point，例如“- 亲吻对方 10 秒”。保存后会按任务条数重建棋盘并重新洗牌。</p>
 
             <div className="modal-actions">
-              <button className="roll-button" type="button" onClick={() => setSettingsOpen(false)}>
+              <button className="roll-button" type="button" onClick={saveSettings}>
                 保存
               </button>
-              <button className="ghost-button" type="button" onClick={resetGame}>
+              <button className="ghost-button" type="button" onClick={() => resetGame()}>
                 用当前设置重开
               </button>
             </div>
