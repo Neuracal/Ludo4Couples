@@ -1,0 +1,688 @@
+:root {
+  color: #321827;
+  background: #fff4f7;
+  font-family: "Nunito", "Microsoft YaHei UI", "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --ink: #321827;
+  --soft-ink: #7d4c62;
+  --cream: #fff9ef;
+  --petal: #ffe2ea;
+  --rose: #ff6f91;
+  --rose-deep: #df3f68;
+  --mint: #36cdb6;
+  --lemon: #ffd166;
+  --sky: #8bd3ff;
+  --shadow: 0 18px 50px rgba(179, 57, 89, 0.18);
+  --tight-shadow: 0 10px 24px rgba(92, 35, 58, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  overflow-x: hidden;
+  padding: max(18px, env(safe-area-inset-top)) clamp(14px, 3vw, 34px) max(22px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 209, 102, 0.45), transparent 24rem),
+    radial-gradient(circle at 88% 8%, rgba(139, 211, 255, 0.38), transparent 21rem),
+    linear-gradient(135deg, #fff8fb 0%, #ffe2ea 48%, #fff9ef 100%);
+}
+
+.app-shell::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  opacity: 0.38;
+  background-image:
+    radial-gradient(circle, rgba(255, 111, 145, 0.2) 0 2px, transparent 2px),
+    radial-gradient(circle, rgba(54, 205, 182, 0.2) 0 2px, transparent 2px);
+  background-position:
+    0 0,
+    18px 18px;
+  background-size: 36px 36px;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: 1220px;
+  margin: 0 auto 18px;
+}
+
+.eyebrow,
+.pill,
+.task-badge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--rose-deep);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.hero h1 {
+  margin: 10px 0 6px;
+  font-family: "Baloo 2", "Comic Sans MS", "Segoe Print", cursive;
+  font-size: clamp(2.25rem, 5vw, 4.8rem);
+  line-height: 0.95;
+  color: var(--rose-deep);
+  text-shadow: 3px 3px 0 #fff, 8px 12px 0 rgba(255, 111, 145, 0.12);
+}
+
+.hero-copy {
+  max-width: 620px;
+  margin: 0;
+  color: var(--soft-ink);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: clamp(14px, 2vw, 24px);
+  max-width: 1220px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.board-panel,
+.control-panel,
+.task-modal,
+.settings-modal {
+  border: 2px solid rgba(255, 255, 255, 0.74);
+  background: rgba(255, 255, 255, 0.74);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.board-panel {
+  border-radius: 28px;
+  padding: clamp(12px, 2vw, 20px);
+}
+
+.board-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.board-topline > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.notice {
+  max-width: 54ch;
+  border-radius: 16px;
+  padding: 10px 14px;
+  background: #fff9ef;
+  color: var(--soft-ink);
+  line-height: 1.5;
+  box-shadow: inset 0 0 0 1px rgba(255, 111, 145, 0.12);
+}
+
+.board-grid {
+  position: relative;
+  display: grid;
+  aspect-ratio: 1;
+  width: min(100%, 820px);
+  margin: 0 auto;
+  gap: clamp(4px, 0.58vw, 7px);
+  border-radius: 24px;
+  padding: clamp(8px, 1.4vw, 14px);
+  background:
+    linear-gradient(135deg, rgba(255, 111, 145, 0.1), transparent 45%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.72) 0 12px, rgba(255, 242, 247, 0.72) 12px 24px);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85);
+}
+
+.center-card {
+  z-index: 0;
+  grid-column: 3 / 8;
+  grid-row: 3 / 8;
+  align-self: stretch;
+  justify-self: stretch;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  border-radius: 28px;
+  border: 2px dashed rgba(255, 111, 145, 0.3);
+  color: var(--rose-deep);
+  background:
+    radial-gradient(circle at 50% 36%, rgba(255, 255, 255, 0.86), transparent 38%),
+    linear-gradient(160deg, rgba(255, 209, 102, 0.28), rgba(139, 211, 255, 0.18));
+  pointer-events: none;
+}
+
+.center-card p {
+  margin: 0;
+  font-family: "Baloo 2", "Comic Sans MS", cursive;
+  font-size: clamp(1.45rem, 4vw, 3.1rem);
+  font-weight: 900;
+}
+
+.center-card small {
+  color: var(--soft-ink);
+  font-weight: 800;
+}
+
+.heart-orbit {
+  display: flex;
+  gap: 8px;
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  animation: floaty 2.8s ease-in-out infinite;
+}
+
+.heart-orbit span:nth-child(2) {
+  color: var(--mint);
+  transform: translateY(8px);
+}
+
+.board-cell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  padding: 3px;
+  border-radius: clamp(8px, 1.1vw, 15px);
+  color: var(--ink);
+  background: linear-gradient(145deg, #fffdf6, #ffe7ef);
+  box-shadow: var(--tight-shadow);
+  border: 2px solid rgba(255, 255, 255, 0.82);
+  text-align: center;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.board-cell:nth-child(4n + 1) {
+  background: linear-gradient(145deg, #fff9ef, #ffdfe8);
+}
+
+.board-cell:nth-child(4n + 2) {
+  background: linear-gradient(145deg, #effffb, #c8f7ee);
+}
+
+.board-cell:nth-child(4n + 3) {
+  background: linear-gradient(145deg, #fff8d8, #ffe8a6);
+}
+
+.board-cell:nth-child(4n + 4) {
+  background: linear-gradient(145deg, #f6f0ff, #dcd1ff);
+}
+
+.board-cell:hover {
+  transform: translateY(-2px) rotate(-1deg);
+}
+
+.board-cell strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: "Baloo 2", "Comic Sans MS", cursive;
+  font-size: clamp(0.62rem, 1.15vw, 0.95rem);
+  font-weight: 900;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.is-start,
+.is-finish {
+  background: linear-gradient(135deg, #fff, #ffd166);
+  outline: 3px solid rgba(255, 111, 145, 0.26);
+}
+
+.tokens {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  display: flex;
+  gap: 2px;
+}
+
+.token {
+  display: grid;
+  width: clamp(20px, 3vw, 30px);
+  height: clamp(20px, 3vw, 30px);
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 900;
+  box-shadow: 0 6px 14px rgba(50, 24, 39, 0.22);
+  animation: tokenPop 240ms ease;
+}
+
+.control-panel {
+  display: grid;
+  gap: 14px;
+  border-radius: 26px;
+  padding: 16px;
+}
+
+.player-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.player-card,
+.rules-card,
+.history-card,
+.dice-stage {
+  border-radius: 20px;
+  background: rgba(255, 249, 239, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(255, 111, 145, 0.12);
+}
+
+.player-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  opacity: 0.78;
+}
+
+.player-card.is-active {
+  opacity: 1;
+  outline: 3px solid rgba(255, 111, 145, 0.26);
+  background: #fff;
+}
+
+.player-card strong,
+.player-card small {
+  display: block;
+}
+
+.player-card small {
+  margin-top: 3px;
+  color: var(--soft-ink);
+}
+
+.player-dot {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(50, 24, 39, 0.2);
+}
+
+.dice-stage {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 18px;
+}
+
+.dice {
+  display: grid;
+  width: 92px;
+  height: 92px;
+  place-items: center;
+  border-radius: 24px;
+  background: #fff;
+  color: var(--rose-deep);
+  font-family: "Baloo 2", "Comic Sans MS", cursive;
+  font-size: 3.2rem;
+  font-weight: 900;
+  box-shadow: 0 14px 32px rgba(255, 111, 145, 0.24), inset 0 -8px 0 rgba(255, 111, 145, 0.08);
+}
+
+.roll-button,
+.ghost-button,
+.text-button,
+.icon-button {
+  cursor: pointer;
+  border: 0;
+}
+
+.roll-button {
+  min-height: 46px;
+  border-radius: 999px;
+  padding: 0 24px;
+  background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 12px 24px rgba(223, 63, 104, 0.28);
+  transition: transform 160ms ease, filter 160ms ease;
+}
+
+.roll-button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.5) opacity(0.7);
+}
+
+.roll-button:not(:disabled):hover,
+.ghost-button:hover,
+.text-button:hover {
+  transform: translateY(-1px);
+}
+
+.ghost-button,
+.text-button {
+  min-height: 42px;
+  border-radius: 999px;
+  padding: 0 18px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--rose-deep);
+  font-weight: 900;
+  box-shadow: inset 0 0 0 2px rgba(255, 111, 145, 0.18);
+}
+
+.text-button {
+  min-height: auto;
+  padding: 7px 12px;
+  color: var(--soft-ink);
+  background: transparent;
+  box-shadow: none;
+}
+
+.rules-card,
+.history-card {
+  padding: 14px;
+}
+
+.rules-card h2,
+.history-card h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.rules-card p,
+.history-card p,
+.history-card ul {
+  margin: 0;
+  color: var(--soft-ink);
+  line-height: 1.6;
+}
+
+.history-card ul {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(69, 19, 42, 0.28);
+  backdrop-filter: blur(10px);
+}
+
+.task-modal,
+.settings-modal {
+  width: min(100%, 520px);
+  border-radius: 28px;
+  padding: clamp(18px, 4vw, 30px);
+  animation: modalIn 180ms ease;
+}
+
+.task-modal h2,
+.settings-modal h2 {
+  margin: 12px 0 10px;
+  font-family: "Baloo 2", "Comic Sans MS", cursive;
+  color: var(--rose-deep);
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  line-height: 1.05;
+}
+
+.task-modal p {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.task-modal small {
+  color: var(--soft-ink);
+  font-weight: 800;
+}
+
+.task-badge {
+  background: #fff;
+}
+
+.modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.winner-modal {
+  text-align: center;
+}
+
+.winner-modal .modal-actions {
+  justify-content: center;
+}
+
+.modal-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.icon-button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--rose-deep);
+  font-size: 1.4rem;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 2px rgba(255, 111, 145, 0.18);
+}
+
+.settings-modal {
+  display: grid;
+  max-height: min(92dvh, 760px);
+  overflow: auto;
+  gap: 14px;
+}
+
+.settings-modal label {
+  display: grid;
+  gap: 7px;
+  color: var(--soft-ink);
+  font-weight: 800;
+}
+
+.settings-modal input[type="text"],
+.settings-modal input:not([type]) {
+  width: 100%;
+  border: 0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #fff9ef;
+  color: var(--ink);
+  outline: 2px solid rgba(255, 111, 145, 0.16);
+}
+
+.settings-note {
+  margin: 0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #fff9ef;
+  color: var(--soft-ink);
+  line-height: 1.6;
+}
+
+.toggle-line {
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+.toggle-line input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--rose);
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes tokenPop {
+  from {
+    transform: scale(0.5);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 900px) {
+  .hero {
+    align-items: stretch;
+  }
+
+  .game-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .control-panel {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .app-shell {
+    padding-inline: 10px;
+  }
+
+  .hero {
+    flex-direction: column;
+  }
+
+  .hero h1 {
+    font-size: 2.45rem;
+  }
+
+  .board-panel {
+    border-radius: 20px;
+    padding: 9px;
+  }
+
+  .board-topline {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .board-grid {
+    gap: 4px;
+    border-radius: 18px;
+    padding: 6px;
+  }
+
+  .board-cell {
+    border-width: 1px;
+    border-radius: 10px;
+    padding: 3px;
+  }
+
+  .board-cell strong {
+    font-size: 0.62rem;
+  }
+
+  .center-card {
+    border-radius: 18px;
+  }
+
+  .center-card p {
+    font-size: 1.35rem;
+  }
+
+  .center-card small {
+    display: none;
+  }
+
+  .tokens {
+    right: 2px;
+    bottom: 2px;
+  }
+
+  .token {
+    width: 18px;
+    height: 18px;
+    font-size: 0.58rem;
+    border-width: 1px;
+  }
+
+  .control-panel {
+    border-radius: 20px;
+    padding: 10px;
+  }
+
+  .dice {
+    width: 78px;
+    height: 78px;
+    font-size: 2.7rem;
+  }
+
+  .modal-actions {
+    display: grid;
+  }
+
+  .modal-actions > button {
+    width: 100%;
+  }
+}
