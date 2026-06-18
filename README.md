@@ -2,6 +2,10 @@
 
 一个本地可运行、可部署到 GitHub Pages 的 React + TypeScript 情侣飞行棋网页游戏。
 
+## 网页运行
+
+打开链接 https://github.com/Neuracal/Ludo4Couples 即可游玩。
+
 ## 本地运行
 
 ```bash
